@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<main>
+    <div class="container py-4">
+      <header class="pb-3 mb-4 border-bottom">
+        <div class="d-flex align-items-center text-dark text-decoration-none">
+            <span class="fs-4">Homepage van {{loggedInUser}}</span>
+        </div>
+      </header>
+      <div class="row align-items-md-stretch">
+        <div class="container-fluid py-6">
+          <div class="h-100 p-5 text-white bg-dark rounded-3">
+            <h1>Uw dashboard</h1>
+            <p>bekijk al uw vallen hier</p>
+            <br>
+            <img class="mb-4" src="../static/media/muis-logo.png" alt="" width="250">
+            <br>
+            <a href="/mijnVallen" class="btn btn-dark btn-lg active" role="button" aria-pressed="true">Bekijk hier</a>
+            <br>
+          </div>
+        </div>
+      </div>
+      <br>
+    </div>
+  </div>
+</main>
+{% endblock %}

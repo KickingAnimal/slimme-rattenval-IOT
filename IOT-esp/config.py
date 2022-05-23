@@ -1,0 +1,3 @@
+WIFI_SSID = "linuxMintDMF"
+WIFI_PASSWORD = "1tbbTzbC"
+SERVER = "10.42.0.1"

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display:block; padding-bottom: 10px;"></div>
+{% if True %}
+<button type="button" class="btn btn-outline-dark" onclick="location.href='/vallen/edit'">Val toevoegen of verwijderen</button>
+{% endif %}
+<div class="list-group" style="padding-top: 5%;">
+  {% for i in stageInfo %}
+    <!-- aantal stages, all data van stage? -->
+    <br>
+    <a href="/valDetail/{{i[0]}}" class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="true">
+      <img src="../static/media/muis-logo.png" alt="twbs" width="32" height="32" class="rounded-circle flex-shrink-0">
+      <div class="d-flex gap-2 w-100 justify-content-center">
+        <div>
+          <h3 class="mb-0">{{i[1]}} -- {{i[2]}} -- {{i[3]}} {{i[4]}}</h3>
+          <p class="mb-0 opacity-75">{{i[5]}}</div>
+        <small class="opacity-50 text-nowrap"> </small>
+      </div>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

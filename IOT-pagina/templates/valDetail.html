@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<br>
+<div style="display:block; padding-bottom: 8px;">
+    <div class="card card-wide">
+        <div class="card-block  cf cf-both">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="pull-left pr-3">
+                        <div style="text-align:center"></div>
+                    </div>
+                    <div class="profile-details" style="padding-left: 150px">
+                        <div class="row cf cf-right">
+                            <div class="col-sm-2 profile-label"><strong><h4>Account</strong></h4></div>
+                            <div class="col-sm-10" style="padding-bottom: 10px;"><h4>{{session['email']}}</h4></div>
+                        </div>
+                        <div class="row cf cf-right">
+                            <div class="col-sm-2 profile-label"><strong><h4>Val naam</strong></h4></div>
+                            <div class="col-sm-10" style="padding-bottom: 10px;"><h4>{{valGegevens[0][0]}}</h4></div>
+                        </div>
+                        <div class="row cf cf-right">
+                            <div class="col-sm-2 profile-label"><strong><h4>val nummer</strong></h4></div>
+                            <div class="col-sm-10" style="padding-bottom: 10px;"><h4>{{valGegevens[0][1]}}</h4></div>
+                        </div>
+                        <div class="row cf cf-right">
+                            <div class="col-sm-2 profile-label"><strong><h4>Status</strong></h4></div>
+                            <div class="col-sm-10" style="padding-bottom: 10px;"><h4>{{valGegevens[0][2]}}</h4></div>
+                        </div>
+                        <br>
+                        <div class="row cf cf-right">
+                            <div class="col-sm-2 profile-label"><strong><h4>val locatie</strong></h4></div>
+                            <div class="col-sm-10" style="padding-bottom: 10px;">
+                                <h4>
+                                    {% if val_ID == 1 %}
+                                        <div class="mapouter"><div class="gmap_canvas"><iframe width="666" height="375" id="gmap_canvas" src="https://maps.google.com/maps?q=%2053.241163,%206.530831%20&t=k&z=19&ie=UTF8&iwloc=&output=embed" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"></iframe><a href="https://123movies-to.org">123 movies</a><br><style>.mapouter{position:relative;text-align:right;height:375px;width:666px;}</style><a href="https://www.embedgooglemap.net"></a><style>.gmap_canvas {overflow:hidden;background:none!important;height:375px;width:666px;}</style></div></div>
+                                    {% else %}
+                                        Geen locatie beschickbaar
+                                    {% endif %}
+                                </h4>
+                            </div>
+                        </div>
+                        </div>
+                    </div>                      
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
