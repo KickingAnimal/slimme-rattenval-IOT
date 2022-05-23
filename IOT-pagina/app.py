@@ -194,4 +194,4 @@ def boeking_edit(boeking_ID):
         return render_template('boeking_edit.html', huisje=huisje, boekingen=newboeking)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0',port=5000)
