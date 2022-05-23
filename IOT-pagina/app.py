@@ -15,52 +15,35 @@ app.secret_key = "secret"
 
 @app.route('/')
 def home():
-    if 'email' in session:
+    if 'email' in session:  # if session exists give params.
         loggedIn=True
         loggedInUser=session['email']
-    else:
+    else:                   # else give other params.
         loggedIn=False
         loggedInUser="niet ingelogd"
-    return render_template('home.html', loggedInUser=loggedInUser, loggedIn=loggedIn)
+    return render_template('home.html', loggedInUser=loggedInUser, loggedIn=loggedIn)   # return home with params based on logged in or not
 
 @app.route('/login')
 def login():
-    return render_template('login.html', pwLabelKleur="black", uLabelKleur="black")
+    return render_template('login.html', pwLabelKleur="black", eLabelKleur="black")
 
 @app.route('/app/login', methods=['POST'])
 def login_user():
     # Get the form data
     email = request.form['email']
     password = request.form['password']
-    begleider = request.form.get('begleider')
-    if begleider == None:
-        begleider = False
-    if begleider == False:
-        # Check if the username exists
-        user_id = do_database(f"SELECT COUNT(student_ID) FROM student WHERE email = '{email}'")
-        if user_id[0][0] == 0:
-            return render_template('login.html', uMessage=" does not exist", pwMessage=" is incorrect", uLabelKleur="red", pwLabelKleur="red")
-        if user_id[0][0] == 0:
-            return render_template('login.html', uMessage=" does not exist", pwMessage=" is incorrect", uLabelKleur="red", pwLabelKleur="red")
-        # Check if the password is correct
-        user_password = do_database(f"SELECT password FROM student WHERE email = '{email}'")
-        if not bcrypt.check_password_hash(user_password[0][0], password):
-            return render_template('login.html', pwMessage=" is incorrect", pwLabelKleur="red")
-    else:
-        # Check if the username exists
-        user_id = do_database(f"SELECT COUNT(ID) FROM begleider WHERE email = '{email}'")
-        if user_id[0][0] == 0:
-            return render_template('login.html', uMessage=" does not exist", pwMessage=" is incorrect", uLabelKleur="red", pwLabelKleur="red")
 
-        # Check if the password is correct
-        user_password = do_database(f"SELECT password FROM begleider WHERE email = '{email}'")
-        if not bcrypt.check_password_hash(user_password[0][0], password):
-            return render_template('login.html', pwMessage=" is incorrect", pwLabelKleur="red")
+    # Check if the email exists
+    user_id = do_database(f"SELECT COUNT(user_ID) FROM users WHERE email = '{email}'")
+    if user_id[0][0] == 0:
+        return render_template('login.html', eMessage=" does not exist", pwMessage=" is incorrect", eLabelKleur="red", pwLabelKleur="red")
+    # Check if the password is correct
+    user_password = do_database(f"SELECT password FROM users WHERE email = '{email}'")
+    if not bcrypt.check_password_hash(user_password[0][0], password):
+        return render_template('login.html', pwMessage=" is incorrect", pwLabelKleur="red")
 
-    # If the username and password are correct, log the user in and set the session
+    # If the email and password are correct, log the user in and set the session
     session['email'] = email
-    session['begleider'] = begleider
-
     # Return user to home page
     return redirect('/')
     
@@ -68,10 +51,8 @@ def login_user():
 def logout():
     # Check if the user is logged in
     if 'email' in session:
-        # Remove the username from the session
+        # Remove the email from the session
         session.pop('email', None)
-    if 'begleider' in session:
-        session.pop('begleider', None)
     return redirect('/')
 
 @app.route('/register')
@@ -86,9 +67,9 @@ def register_user():
     password2 = request.form['password2']
 
     # Check if the first name already exists
-    user_id = do_database(f"SELECT COUNT(student_ID) FROM student WHERE email = '{email}'")
+    user_id = do_database(f"SELECT COUNT(user_ID) FROM users WHERE email = '{email}'")
     if user_id[0][0] != 0:
-        return render_template('register.html', uMessage=" already exists", uLabelKleur="red")
+        return render_template('register.html', eMessage=" already registered", eLabelKleur="red")
     # check password not empty and hash the password
     if len(password) == 0:
         return render_template('register.html', pMessage=" must not be empty", pLabelKleur="red")
@@ -96,19 +77,17 @@ def register_user():
         return render_template('register.html', pMessage=" is not the same", pLabelKleur="red")
     else:
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-    # Add the user to the database
-    do_database(f"INSERT INTO student (email, password) VALUES ('{email}','{hashed_password}')")
-
-    # Log the user in
-    session['email'] = email
-
-    # Redirect to the home page
-    return redirect('/')
+        # Add the user to the database
+        do_database(f"INSERT INTO users (email, password) VALUES ('{email}','{hashed_password}')")
+        # Log the user in
+        session['email'] = email
+        # Redirect to the home page
+        return redirect('/')
+    return redirect('/register')
 
 @app.route('/valDetail')
 def val_detail_none():
-    return redirect("/valDetail/0")
+    return render_template('nietGeldig.html')
 
 @app.route('/valDetail/<int:val_ID>')
 def val_details(val_ID):
@@ -123,9 +102,8 @@ def val_details(val_ID):
     if val_ID == 0:
         return render_template('nietGeldig.html')
 
-    if loggedIn:
+    if loggedIn:    #rewrite based on new database struct.
         valGegevens = do_database(f"SELECT ins.instellingNaam, ins.instellingType, beg.email, st.cijfer, st.periode FROM stage AS st JOIN instelling AS ins ON st.instelling_ID = ins.ID JOIN begleider AS beg ON st.begleider_ID = beg.ID WHERE st.id = {val_ID}")
-        print(valGegevens)
         #for i in range(0, len(valGegevens)):
         #    for j in range(0, len(valGegevens[i])):
         #        if valGegevens[i][j] == " " or valGegevens[i][j] == "" or valGegevens[i][j] == "NULL":
@@ -135,12 +113,9 @@ def val_details(val_ID):
         #if val_ID == 2:
         #    valGegevens = [('valNaam2', '2', "offline")]
         return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID)
-    elif False:
-        valGegevens = [('geen stage info voor een begleider', '')]
-        return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens)
-        pass
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
+    return redirect('/404')
 
 @app.route('/mijnVallen')
 def mijn_vallen():
@@ -152,19 +127,19 @@ def mijn_vallen():
         loggedInUser="niet ingelogd"
     if loggedIn:
 
-        stageInfo = do_database(f"SELECT si.ID, ins.instellingType, ins.instellingNaam, beg.email,  si.omschrijving FROM stageInfo AS si JOIN instelling AS ins ON si.instelling_ID = ins.ID JOIN begleider AS beg ON si.begleider_ID = beg.ID")
-        aantalStage = len(stageInfo)
+        vallenInfo = do_database(f"SELECT si.ID, ins.instellingType, ins.instellingNaam, beg.email,  si.omschrijving FROM stageInfo AS si JOIN instelling AS ins ON si.instelling_ID = ins.ID JOIN begleider AS beg ON si.begleider_ID = beg.ID")
+        aantalVallen = len(vallenInfo)
         gegevens = []
         allGegevens =[]
-        for i in range(0, len(stageInfo)):
-            (allGegevens.append(list(stageInfo[i])))
-            for j in range(0, len(stageInfo[i])):
-                (gegevens.append(stageInfo[i][j]))
-        print(stageInfo)
-        return render_template('mijnVallen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, stageInfo=stageInfo, aantalStage=aantalStage, gegevens=gegevens)
-
+        for i in range(0, len(vallenInfo)):
+            (allGegevens.append(list(vallenInfo[i])))
+            for j in range(0, len(vallenInfo[i])):
+                (gegevens.append(vallenInfo[i][j]))
+        print(vallenInfo)
+        return render_template('mijnVallen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, vallenInfo=vallenInfo, aantalVallen=aantalVallen, gegevens=gegevens)
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
+    return redirect('/404')
 
 @app.route('/vallen/edit')
 def val_edit():
@@ -183,15 +158,26 @@ def val_edit():
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
 
-@app.route('/edit/<int:boeking_ID>')
-def boeking_edit(boeking_ID):
-    if 'username' in session:
-        huisje = do_database(f"SELECT * FROM boeking WHERE id = {boeking_ID}")
+    return redirect('/404')
+
+@app.route('/edit/<int:val_ID>')
+def val_edit2(val_ID):
+    if 'email' in session:
+        val = do_database(f"SELECT * FROM vallen WHERE val_ID = {val_ID} and user_ID = {user_ID}")
         boekingen = do_database(f"SELECT boekingweek from boeking WHERE huisje_ID = {huisje[0][2]}")
         newboeking = []
         for item in boekingen:
             newboeking.append(item[0])
-        return render_template('boeking_edit.html', huisje=huisje, boekingen=newboeking)
+        return render_template('boeking_edit.html', val=val, boekingen=newboeking)
+    
+    return redirect('/404')
+
+@app.route('/404')
+def fourOfour_page():
+    return render_template('404.html')
+@app.errorhandler(404)
+def error_page(e):
+    return redirect('/404')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0',port=5000)
