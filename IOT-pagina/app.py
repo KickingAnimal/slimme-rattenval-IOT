@@ -103,7 +103,7 @@ def val_details(val_ID):
         return render_template('nietGeldig.html')
 
     if loggedIn:    #rewrite based on new database struct.
-        valGegevens = do_database(f"SELECT ins.instellingNaam, ins.instellingType, beg.email, st.cijfer, st.periode FROM stage AS st JOIN instelling AS ins ON st.instelling_ID = ins.ID JOIN begleider AS beg ON st.begleider_ID = beg.ID WHERE st.id = {val_ID}")
+        valGegevens = do_database(f"SELECT vi.* FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID WHERE email = '{loggedInUser}' AND vi.val_ID = {val_ID}")
         #for i in range(0, len(valGegevens)):
         #    for j in range(0, len(valGegevens[i])):
         #        if valGegevens[i][j] == " " or valGegevens[i][j] == "" or valGegevens[i][j] == "NULL":
@@ -112,6 +112,7 @@ def val_details(val_ID):
         #            valGegevens[i] = tuple(y)
         #if val_ID == 2:
         #    valGegevens = [('valNaam2', '2', "offline")]
+        print(valGegevens)
         return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID)
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
