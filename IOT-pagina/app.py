@@ -127,7 +127,7 @@ def mijn_vallen():
         loggedInUser="niet ingelogd"
     if loggedIn:
 
-        vallenInfo = do_database(f"SELECT si.ID, ins.instellingType, ins.instellingNaam, beg.email,  si.omschrijving FROM stageInfo AS si JOIN instelling AS ins ON si.instelling_ID = ins.ID JOIN begleider AS beg ON si.begleider_ID = beg.ID")
+        vallenInfo = do_database(f"SELECT vi.* FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID WHERE email = '{loggedInUser}'")
         aantalVallen = len(vallenInfo)
         gegevens = []
         allGegevens =[]
