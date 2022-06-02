@@ -13,6 +13,13 @@ app = Flask(__name__)
 
 app.secret_key = "secret"
 
+@app.before_request
+def before_request():
+    if not request.is_secure:
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
+        
 @app.route('/')
 def home():
     if 'email' in session:  # if session exists give params.
@@ -173,4 +180,9 @@ def error_page(e):
     return redirect('/404')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0',port=5000)
+    jls_extract_var = 'ssl/kickinganimal.nl/key.pem'
+    def jls_extract_def():
+        return ('ssl/kickinganimal.nl/cert.pem', jls_extract_var)
+
+
+    app.run(debug=True, host='0.0.0.0',port=5000, ssl_context=jls_extract_def())
