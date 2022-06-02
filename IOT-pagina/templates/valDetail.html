@@ -12,6 +12,7 @@
                         <div style="text-align:center"></div>
                     </div>
                     <div class="profile-details" style="padding-left: 150px">
+                        <br>
                         <div class="row cf cf-right">
                             <div class="col-sm-2 profile-label"><strong><h4>Account</strong></h4></div>
                             <div class="col-sm-10" style="padding-bottom: 10px;"><h4>{{session['email']}}</h4></div>
@@ -26,31 +27,30 @@
                         </div>
                         <div class="row cf cf-right">
                             <div class="col-sm-2 profile-label"><strong><h4>Status</strong></h4></div>
-                            <div class="col-sm-10" style="padding-bottom: 10px;"><h4>{{valGegevens[0][4]}}</h4></div>
+                            <div class="col-sm-10" style="padding-bottom: 10px;"><h4>{{valGegevens[0][6]}}</h4></div>
                         </div>
                         <br>
                         <div class="row cf cf-right">
                             <div class="col-sm-2 profile-label"><strong><h4>val locatie</strong></h4></div>
                             <div class="col-sm-10" style="padding-bottom: 10px;">
                                 <h4>
-                                    {% if val_ID == 1 %}
-                                        <div class="mapouter">
+                                    {% if valStatus >= 1 %}
+                                        <!-- <div class="mapouter">
                                             <div class="gmap_canvas">
                                                 <iframe width="666" height="375" id="gmap_canvas" src="https://maps.google.com/maps?q=%2053.241163,%206.530831%20&t=k&z=19&ie=UTF8&iwloc=&output=embed" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"/>
                                                 <style>.mapouter{position:relative;text-align:right;height:375px;width:666px;}</style>
                                                 <style>.gmap_canvas {overflow:hidden;background:none!important;height:375px;width:666px;}</style>
                                             </div>
-                                        </div>
+                                        </div> -->
                                         <iframe
-                                          width="600"
-                                          height="450"
-                                          style="border:0"
-                                          loading="lazy"
-                                          allowfullscreen
-                                          referrerpolicy="no-referrer-when-downgrade"
-                                          src="https://www.google.com/maps/embed/v1/place?key=API_KEY
-                                            &q=Space+Needle,Seattle+WA">
+                                          width="666"
+                                          height="375"
+                                          frameborder="0" style="border:0;"
+                                          referrerpolicy="origin"
+                                          src="https://maps.google.com/maps?q= {{valGegevens[0][5]}} &t=k&z=17&ie=UTF8&iwloc=&output=embed"
+                                          allowfullscreen>
                                         </iframe>
+                                        <!-- src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAJi5iJ7xq64NrFk-uY-iZ8u4rTicDDWU0&q=0,0" -->
                                     {% else %}
                                         Geen locatie beschickbaar
                                     {% endif %}

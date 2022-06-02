@@ -103,17 +103,9 @@ def val_details(val_ID):
         return render_template('nietGeldig.html')
 
     if loggedIn:    #rewrite based on new database struct.
-        valGegevens = do_database(f"SELECT vi.* FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID WHERE email = '{loggedInUser}' AND vi.val_ID = {val_ID}")
-        #for i in range(0, len(valGegevens)):
-        #    for j in range(0, len(valGegevens[i])):
-        #        if valGegevens[i][j] == " " or valGegevens[i][j] == "" or valGegevens[i][j] == "NULL":
-        #            y = list(valGegevens[i])
-        #            y[j] = "geen info"
-        #            valGegevens[i] = tuple(y)
-        #if val_ID == 2:
-        #    valGegevens = [('valNaam2', '2', "offline")]
-        print(valGegevens)
-        return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID)
+        valGegevens = do_database(f"SELECT vi.*, st.statusNaam FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID JOIN status AS st ON vi.valStatus = st.status_ID WHERE email = '{loggedInUser}' AND vi.val_ID = {val_ID}")
+        valStatus = valGegevens[0][4]
+        return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID, valStatus=valStatus)
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
     return redirect('/404')
@@ -128,7 +120,7 @@ def mijn_vallen():
         loggedInUser="niet ingelogd"
     if loggedIn:
 
-        vallenInfo = do_database(f"SELECT vi.* FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID WHERE email = '{loggedInUser}'")
+        vallenInfo = do_database(f"SELECT vi.*, st.statusNaam FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID JOIN status AS st ON vi.valStatus = st.status_ID WHERE email = '{loggedInUser}'")
         aantalVallen = len(vallenInfo)
         gegevens = []
         allGegevens =[]
