@@ -1,4 +1,5 @@
 # "Slimme" muizenval voor IOT project 5Groningen
+School project voor 5Groningen
 
 Dit is de code voor de webapplicatie/server en de esp32 voor de slimme muizenval voor 5Groningen.
 
