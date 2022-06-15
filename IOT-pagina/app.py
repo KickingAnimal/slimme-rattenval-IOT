@@ -1,6 +1,7 @@
-from flask import Flask, render_template, redirect, request, session
+from flask import Flask, render_template, redirect, request, session, jsonify
 from flask_bcrypt import Bcrypt
 from database import *
+import string
 
 bcrypt = Bcrypt()
 app = Flask(__name__)
@@ -170,6 +171,30 @@ def val_edit2(val_ID):
         return render_template('boeking_edit.html', val=val, boekingen=newboeking)
     
     return redirect('/404')
+
+def validate_mac(mac):
+    return len(mac) == 12 and all(c in string.hexdigits for c in mac)
+
+@app.route('/app/connect', methods=['POST'])
+def val_connectie():
+    if not request.json:
+        return jsonify({ "error": "invalid-json" })
+    if not validate_mac(request.json['valMac']):
+        return jsonify({ "error": "invalid-mac" })
+
+    return jsonify({ "error": "Nothing happened" })
+@app.route('/app/valUpdate', methods=['POST'])
+def val_update():
+    if not request.json:
+        return jsonify({ "error": "invalid-json" })
+    if not validate_mac(request.json['valMac']):
+        return jsonify({ "error": "invalid-mac" })
+
+    return jsonify({ "error": "Nothing happened" })
+
+@app.route('/valToevoegen', methods=['GET', 'POST'])
+def val_toevoegen():
+    pass
 
 @app.route('/404')
 def fourOfour_page():
