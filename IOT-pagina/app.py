@@ -110,7 +110,7 @@ def val_details(val_ID):
         return render_template('nietGeldig.html')
 
     if loggedIn:    #rewrite based on new database struct.
-        valGegevens = do_database(f"SELECT vi.*, st.statusNaam FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID JOIN status AS st ON vi.valStatus = st.status_ID WHERE email = '{loggedInUser}' AND vi.val_ID = {val_ID}")
+        valGegevens = do_database(f"SELECT vi.*, st.statusNaam FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID JOIN status AS st ON vi.valStatus = st.status_ID WHERE email = '{loggedInUser}' AND vi.val_ID = '{val_ID}'")
         valStatus = valGegevens[0][4]
         return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID, valStatus=valStatus)
     elif loggedIn!=True:
@@ -141,7 +141,7 @@ def mijn_vallen():
         return render_template('nietIngelogd.html')
     return redirect('/404')
 
-@app.route('/vallen/edit')
+@app.route('/vallen/edit')  # complete bullshit for now.
 def val_edit():
     if 'email' in session:
         loggedIn=True
@@ -160,7 +160,7 @@ def val_edit():
 
     return redirect('/404')
 
-@app.route('/edit/<int:val_ID>')
+@app.route('/edit/<int:val_ID>')    # complete bullshit for now x2.
 def val_edit2(val_ID):
     if 'email' in session:
         val = do_database(f"SELECT * FROM vallen WHERE val_ID = {val_ID} and user_ID = {user_ID}")
@@ -175,12 +175,20 @@ def val_edit2(val_ID):
 def validate_mac(mac):
     return len(mac) == 12 and all(c in string.hexdigits for c in mac)
 
+def validate_val_id(val_ID):
+    validate = do_database(f"SELECT COUNT(val_ID) FROM valInfo WHERE val_ID = '{val_ID}'")
+    if len(str(val_ID)) > 12 or not all(i in string.digits for i in str(val_ID)):
+        validate = [(0,)]
+    return bool(validate[0][0])
+
 @app.route('/app/connect', methods=['POST'])
 def val_connectie():
     if not request.json:
         return jsonify({ "error": "invalid-json" })
     if not validate_mac(request.json['valMac']):
         return jsonify({ "error": "invalid-mac" })
+    if validate_val_id(request.json['val_ID']):
+        return jsonify({"error": "valId already exist"})
 
     return jsonify({ "error": "Nothing happened" })
 @app.route('/app/valUpdate', methods=['POST'])
@@ -189,6 +197,8 @@ def val_update():
         return jsonify({ "error": "invalid-json" })
     if not validate_mac(request.json['valMac']):
         return jsonify({ "error": "invalid-mac" })
+    if not validate_val_id(request.json['val_ID']):
+        return jsonify({"error": "invalid-valId"})
 
     return jsonify({ "error": "Nothing happened" })
 
