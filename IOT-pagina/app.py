@@ -17,8 +17,7 @@ app.secret_key = "secret"
 def before_request():
     if not request.is_secure:
         url = request.url.replace('http://', 'https://', 1)
-        code = 301
-        return redirect(url, code=code)
+        return redirect(url)
         
 @app.route('/')
 def home():
@@ -180,9 +179,10 @@ def error_page(e):
     return redirect('/404')
 
 if __name__ == '__main__':
-    jls_extract_var = 'ssl/kickinganimal.nl/key.pem'
-    def jls_extract_def():
-        return ('ssl/kickinganimal.nl/cert.pem', jls_extract_var)
+    privKey = 'ssl/kickinganimal.nl/privatekey.pem'
+    cert = 'ssl/kickinganimal.nl/cert.pem'
+    def sslContext():
+        return (cert, privKey)
 
 
-    app.run(debug=True, host='0.0.0.0',port=5000, ssl_context=jls_extract_def())
+    app.run(debug=True, host='0.0.0.0',port=5000, ssl_context=sslContext())
