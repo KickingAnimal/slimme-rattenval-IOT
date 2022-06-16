@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <main class="form-signin">
+        <form action="/app/valToevoegen" method="post">
+          <h1 class="h3 mb-3 fw-normal">Voeg uw val toe</h1>
+          <div class="form-floating">
+            <input type="text" class="form-control" id="val_ID" name="val_ID" placeholder="val nummer">
+            <label for="val_ID" style="color: {{vLabelKleur}};">Val Nummer {{vMessage}}</label>
+          <div class="form-floating">
+            <input type="text" class="form-control" id="valNaam" name="valNaam" placeholder="Nieuwe val naam">
+            <label for="valNaam" style="color: {{nLabelKleur}};">Naam voor uw val {{nMessage}}</label>
+          </div>
+          <div class="form-floating ">
+            <input type="locatie" class="form-control" id="valLocatie" name="valLocatie" placeholder="0,0">
+            <label for="valLocatie" style="color: {{lLabelKleur}};">GPS positie [PLACEHOLDER] {{lMessage}}</label>           
+          </div>
+          <button type="submit" class="w-100 btn btn-outline-dark ">Voeg toe</button>
+        </form>
+      </main>
+{% endblock %}

@@ -29,6 +29,7 @@ def home():
     else:                   # else give other params.
         loggedIn=False
         loggedInUser="niet ingelogd"
+    
     return render_template('home.html', loggedInUser=loggedInUser, loggedIn=loggedIn)   # return home with params based on logged in or not
 
 @app.route('/login')
@@ -76,13 +77,17 @@ def register_user():
 
     # Check if the first name already exists
     user_id = do_database(f"SELECT COUNT(user_ID) FROM users WHERE email = '{email}'")
+    
     if user_id[0][0] != 0:
         return render_template('register.html', eMessage=" already registered", eLabelKleur="red")
     # check password not empty and hash the password
+    
     if len(password) == 0:
         return render_template('register.html', pMessage=" must not be empty", pLabelKleur="red")
+    
     elif password != password2:
         return render_template('register.html', pMessage=" is not the same", pLabelKleur="red")
+    
     else:
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         # Add the user to the database
@@ -91,6 +96,7 @@ def register_user():
         session['email'] = email
         # Redirect to the home page
         return redirect('/')
+    
     return redirect('/register')
 
 @app.route('/valDetail')
@@ -99,10 +105,10 @@ def val_detail_none():
 
 @app.route('/valDetail/<int:val_ID>')
 def val_details(val_ID):
-    print(val_ID)
     if 'email' in session:
         loggedIn=True
         loggedInUser=session['email']
+    
     else:
         loggedIn=False
         loggedInUser="niet ingelogd"
@@ -113,9 +119,12 @@ def val_details(val_ID):
     if loggedIn:    #rewrite based on new database struct.
         valGegevens = do_database(f"SELECT vi.*, st.statusNaam FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID JOIN status AS st ON vi.valStatus = st.status_ID WHERE email = '{loggedInUser}' AND vi.val_ID = '{val_ID}'")
         valStatus = valGegevens[0][4]
+    
         return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID, valStatus=valStatus)
+    
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
+    
     return redirect('/404')
 
 @app.route('/mijnVallen')
@@ -132,14 +141,18 @@ def mijn_vallen():
         aantalVallen = len(vallenInfo)
         gegevens = []
         allGegevens =[]
+        
         for i in range(0, len(vallenInfo)):
             (allGegevens.append(list(vallenInfo[i])))
+            
             for j in range(0, len(vallenInfo[i])):
                 (gegevens.append(vallenInfo[i][j]))
-        print(vallenInfo)
+        
         return render_template('mijnVallen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, vallenInfo=vallenInfo, aantalVallen=aantalVallen, gegevens=gegevens)
+    
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
+    
     return redirect('/404')
 
 @app.route('/vallen/edit')  # complete bullshit for now.
@@ -185,10 +198,16 @@ def validate_val_id(val_ID):
     validate = [(1,)]
     if len(str(val_ID)) > 12 or not all(i in string.digits for i in str(val_ID)):
         validate = [(0,)]
+    if val_ID == "":
+        validate = [(0,)]
     return bool(validate[0][0])
 
 def existing_val_id(val_ID):
     validate = do_database(f"SELECT COUNT(val_ID) FROM valInfo WHERE val_ID = '{val_ID}'")
+    return bool(validate[0][0])
+
+def existing_temp_val_id(val_ID):
+    validate = do_database(f"SELECT COUNT(val_ID) FROM valConnect WHERE val_ID = '{val_ID}'")
     return bool(validate[0][0])
 
 def resetDatabase():
@@ -202,6 +221,7 @@ def val_connectie():
     val_ID = request.json['val_ID']
     timeStamp = datetime.utcnow()
     timeStamp = (timeStamp + timedelta(minutes=5)).timestamp()
+    
     if not request.json:
         return jsonify({ "error": "invalid-json: request must be in json formatting" })
     if not validate_mac(valMac):
@@ -213,13 +233,11 @@ def val_connectie():
     if existing_val_id(val_ID):
         return jsonify({"error": "valId already exists"})
     
-    print("val_ID & valMac:", val_ID, valMac)
     do_database(f"INSERT INTO valConnect (val_ID, valMac, timeStamp) VALUES ('{val_ID}', '{valMac}', '{timeStamp}')")
     inserted = do_database(f"SELECT * FROM valConnect WHERE val_ID == '{val_ID}' AND valMac == '{valMac}'")
-    print("inserted:",inserted)
+    
     if inserted == []:
         inserted = [(None,None)]
-    print("'inserted':",inserted)
     database_ID = inserted[0][0]
     databaseMac = inserted[0][1]
 
@@ -249,10 +267,67 @@ def val_update():
     print(val_ID,valMac)
     return jsonify({ "error": "Nothing happened" })
 
-@app.route('/valToevoegen', methods=['GET', 'POST'])
+@app.route('/valToevoegen', methods=['GET'])
 def val_toevoegen():
     resetDatabase()
-    pass
+    
+    if 'email' in session:
+        loggedIn=True
+        loggedInUser=session['email']
+    else:
+        loggedIn=False
+        loggedInUser="niet ingelogd"
+
+    if loggedIn:
+        return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, vLabelKleur='black', nLabelKleur='black', lLabelKleur='black')
+
+    elif loggedIn!=True:
+        return render_template('nietIngelogd.html')
+
+    return redirect('/404')
+
+@app.route('/app/valToevoegen', methods=['POST'])
+def val_toevoegen_api():
+    resetDatabase()
+    
+    if 'email' in session:
+        loggedIn=True
+        loggedInUser=session['email']
+    else:
+        loggedIn=False
+        loggedInUser="niet ingelogd"
+
+    val_ID = request.form['val_ID']
+    valNaam = request.form['valNaam']
+    valLocatie = request.form['valLocatie']
+    valStatus = 1   #set state on active, assuming heartbead was less then 5 minutes this is fine imo
+    user_ID = do_database(f"SELECT user_ID FROM users WHERE email == '{loggedInUser}'")
+    tempValMac = do_database(f"SELECT valMac FROM valConnect WHERE val_ID == '{val_ID}';")
+    
+    if valNaam == "":
+        valNaam = f"Nieuwe val van {loggedInUser}"
+
+    if loggedIn:
+        if validate_val_id(val_ID): 
+            if existing_val_id(val_ID):
+                return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black', vLabelKleur='red', vMessage='bestaat al', lLabelKleur='black')
+            
+            elif not existing_temp_val_id(val_ID):
+                return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black', vLabelKleur='red', vMessage='niet in connect modus', lLabelKleur='black')
+            
+            else:
+                do_database(f"INSERT INTO valInfo (val_ID, user_ID, valMac, valNaam, valStatus, valLocatie) VALUES ('{val_ID}', '{user_ID[0][0]}', '{tempValMac[0][0]}', '{valNaam}', '{valStatus}', '{valLocatie}');")
+                do_database(f"DELETE FROM valConnect WHERE val_ID == '{val_ID}';")
+                return redirect('/mijnVallen') 
+        
+        else:
+            return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black', vLabelKleur='red', vMessage='niet geldig', lLabelKleur='black')
+
+    elif loggedIn!=True:
+        return render_template('nietIngelogd.html')
+
+    return redirect('/404')
+
 
 @app.route('/404')
 def fourOfour_page():
