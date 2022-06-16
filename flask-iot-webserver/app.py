@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, session, jsonify
 from flask_bcrypt import Bcrypt
 from database import *
+from datetime import datetime
 import string
 
 bcrypt = Bcrypt()
@@ -173,33 +174,77 @@ def val_edit2(val_ID):
     return redirect('/404')
 
 def validate_mac(mac):
-    return len(mac) == 12 and all(c in string.hexdigits for c in mac)
+    return len(mac) == 12 and all(i in string.hexdigits for i in mac)
+
+def existing_mac(mac):
+    exists = do_database(f"SELECT COUNT(valMac) FROM valInfo WHERE valMac = '{mac}'")
+    return bool(exists[0][0])
 
 def validate_val_id(val_ID):
-    validate = do_database(f"SELECT COUNT(val_ID) FROM valInfo WHERE val_ID = '{val_ID}'")
+    validate = [(1,)]
     if len(str(val_ID)) > 12 or not all(i in string.digits for i in str(val_ID)):
         validate = [(0,)]
     return bool(validate[0][0])
 
+def existing_val_id(val_ID):
+    validate = do_database(f"SELECT COUNT(val_ID) FROM valInfo WHERE val_ID = '{val_ID}'")
+    return bool(validate[0][0])
+
+def resetDatabase(val_ID, valMac):
+    time = datetime.now()
+    do_database(f"DELETE FROM valConnect WHERE val_ID == '{val_ID}' OR valMac == '{valMac}';")
+    pass
+
 @app.route('/app/connect', methods=['POST'])
 def val_connectie():
-    if not request.json:
-        return jsonify({ "error": "invalid-json" })
-    if not validate_mac(request.json['valMac']):
-        return jsonify({ "error": "invalid-mac" })
-    if validate_val_id(request.json['val_ID']):
-        return jsonify({"error": "valId already exist"})
+    valMac = request.json['valMac']
+    val_ID = request.json['val_ID']
 
-    return jsonify({ "error": "Nothing happened" })
+    if not request.json:
+        return jsonify({ "error": "invalid-json: request must be in json formatting" })
+    if not validate_mac(valMac):
+        return jsonify({ "error": "invalid-mac: mac must be in '1234567890AB' format" })
+    if existing_mac(valMac):
+        return jsonify({ "error": "invalid-mac: valMac already exists" })
+    if not validate_val_id(val_ID):
+        return jsonify({"error": "invalid-valId: invalid format: must be in 0 - 123456789012 format. only numeric."})
+    if existing_val_id(val_ID):
+        return jsonify({"error": "valId already exists"})
+    
+    print("val_ID & valMac:", val_ID, valMac)
+    do_database(f"INSERT INTO valConnect (val_ID, valMac) VALUES ('{val_ID}', '{valMac}')")
+    inserted = do_database(f"SELECT * FROM valConnect WHERE val_ID == '{val_ID}' AND valMac == '{valMac}'")
+    print("inserted:",inserted)
+    if inserted == []:
+        inserted = [(None,None)]
+    print("'inserted':",inserted)
+    database_ID = inserted[0][0]
+    databaseMac = inserted[0][1]
+    resetDatabase(val_ID, valMac)
+
+    print("val_ID & valMac:", val_ID,valMac,"database_ID & databaseMac:", database_ID, databaseMac)
+    if int(val_ID) == database_ID and valMac == databaseMac:
+        return jsonify({ "error": "OK: no errors caught" })
+    else:
+        return jsonify({"error": "ERROR!: something went wrong in the database"})
 @app.route('/app/valUpdate', methods=['POST'])
 def val_update():
-    if not request.json:
-        return jsonify({ "error": "invalid-json" })
-    if not validate_mac(request.json['valMac']):
-        return jsonify({ "error": "invalid-mac" })
-    if not validate_val_id(request.json['val_ID']):
-        return jsonify({"error": "invalid-valId"})
+    valMac = request.json['valMac']
+    val_ID = request.json['val_ID']
 
+    if not request.json:
+        return jsonify({ "error": "invalid-json: request must be in json formatting" })
+    if not validate_mac(valMac):
+        return jsonify({ "error": "invalid-mac: mac must be in '1234567890AB' format" })
+    if not existing_mac(valMac):
+        return jsonify({ "error": "invalid-valMac: valMac does not exists" })
+    if not validate_val_id(val_ID):
+        return jsonify({"error": "invalid-valId: invalid format: must be in 0 - 123456789012 format. only numeric."})
+    if not existing_val_id(val_ID):
+        return jsonify({"error": "invalid-valId: valId does not exist"})
+
+
+    print(val_ID,valMac)
     return jsonify({ "error": "Nothing happened" })
 
 @app.route('/valToevoegen', methods=['GET', 'POST'])

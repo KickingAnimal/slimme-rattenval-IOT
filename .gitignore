@@ -4,3 +4,4 @@ flask-iot-webserver/.fuse_hidden0000000c00000001
 projectIOT.code-workspace
 flask-iot-webserver/database.sqbpro
 flask-iot-webserver/ssl/
+flask-iot-webserver/database.db-journal
