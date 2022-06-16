@@ -1,6 +1,6 @@
-IOT-pagina/__pycache__/
-IOT-pagina/database-og.db
-IOT-pagina/.fuse_hidden0000000c00000001
+flask-iot-webserver/__pycache__/
+flask-iot-webserver/database-og.db
+flask-iot-webserver/.fuse_hidden0000000c00000001
 projectIOT.code-workspace
-IOT-pagina/database.sqbpro
-IOT-pagina/ssl/
+flask-iot-webserver/database.sqbpro
+flask-iot-webserver/ssl/
