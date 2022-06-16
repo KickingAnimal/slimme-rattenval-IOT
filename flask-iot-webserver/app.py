@@ -251,6 +251,7 @@ def val_update():
 
 @app.route('/valToevoegen', methods=['GET', 'POST'])
 def val_toevoegen():
+    resetDatabase()
     pass
 
 @app.route('/404')
