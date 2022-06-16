@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, request, session, jsonify
 from flask_bcrypt import Bcrypt
 from database import *
-from datetime import datetime
+from datetime import datetime, timedelta
 import string
 
 bcrypt = Bcrypt()
@@ -190,16 +190,17 @@ def existing_val_id(val_ID):
     validate = do_database(f"SELECT COUNT(val_ID) FROM valInfo WHERE val_ID = '{val_ID}'")
     return bool(validate[0][0])
 
-def resetDatabase(val_ID, valMac):
-    time = datetime.now()
-    do_database(f"DELETE FROM valConnect WHERE val_ID == '{val_ID}' OR valMac == '{valMac}';")
-    pass
+def resetDatabase():
+    curTime = datetime.utcnow().timestamp()
+    do_database(f"DELETE FROM valConnect WHERE timeStamp < {curTime};")
+
 
 @app.route('/app/connect', methods=['POST'])
 def val_connectie():
     valMac = request.json['valMac']
     val_ID = request.json['val_ID']
-
+    timeStamp = datetime.utcnow()
+    timeStamp = (timeStamp + timedelta(minutes=5)).timestamp()
     if not request.json:
         return jsonify({ "error": "invalid-json: request must be in json formatting" })
     if not validate_mac(valMac):
@@ -212,7 +213,7 @@ def val_connectie():
         return jsonify({"error": "valId already exists"})
     
     print("val_ID & valMac:", val_ID, valMac)
-    do_database(f"INSERT INTO valConnect (val_ID, valMac) VALUES ('{val_ID}', '{valMac}')")
+    do_database(f"INSERT INTO valConnect (val_ID, valMac, timeStamp) VALUES ('{val_ID}', '{valMac}', '{timeStamp}')")
     inserted = do_database(f"SELECT * FROM valConnect WHERE val_ID == '{val_ID}' AND valMac == '{valMac}'")
     print("inserted:",inserted)
     if inserted == []:
@@ -220,13 +221,13 @@ def val_connectie():
     print("'inserted':",inserted)
     database_ID = inserted[0][0]
     databaseMac = inserted[0][1]
-    resetDatabase(val_ID, valMac)
 
     print("val_ID & valMac:", val_ID,valMac,"database_ID & databaseMac:", database_ID, databaseMac)
     if int(val_ID) == database_ID and valMac == databaseMac:
         return jsonify({ "error": "OK: no errors caught" })
     else:
         return jsonify({"error": "ERROR!: something went wrong in the database"})
+
 @app.route('/app/valUpdate', methods=['POST'])
 def val_update():
     valMac = request.json['valMac']
