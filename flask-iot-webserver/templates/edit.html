@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1> dit word de pagina waar je een val aanpassen</h1>
+<h1 class="h3 mb-3 fw-normal" style="padding-top: 2%;">Pas val "{{valNaam}}" aan</h1>
+    <main class="form-signin">
+        <form action="/app/valEdit/{{val_ID}}" method="post">
+          <div class="form-floating">
+            <input type="text" class="form-control" id="valNaam" name="valNaam" placeholder="Nieuwe val naam">
+            <label for="valNaam" style="color: {{nLabelKleur}};">Niuwe naam voor val: {{valNaam}}</label>
+          </div>
+          <div class="form-floating ">
+            <input type="locatie" class="form-control" id="valLocatie" name="valLocatie" placeholder="0,0">
+            <label for="valLocatie" style="color: {{lLabelKleur}};">Niuewe GPS positie [PLACEHOLDER] {{lMessage}}</label>           
+          </div>
+          <button type="submit" class="w-100 btn btn-outline-dark ">Voeg toe</button>
+        </form>
+      </main>
 {% endblock %}

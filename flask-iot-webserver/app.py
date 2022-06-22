@@ -155,8 +155,8 @@ def mijn_vallen():
     
     return redirect('/404')
 
-@app.route('/vallen/edit')  # complete bullshit for now.
-def val_edit():
+@app.route('/valEdit/<int:val_ID>')
+def val_edit(val_ID):
     if 'email' in session:
         loggedIn=True
         loggedInUser=session['email']
@@ -164,28 +164,27 @@ def val_edit():
         loggedIn=False
         loggedInUser="niet ingelogd"
 
-    if loggedIn:
-        stageInfo = do_database(f"SELECT si.ID, si.instelling_ID, ins.instellingType, ins.instellingNaam, si.begleider_ID, beg.email, beg.achternaam,  si.omschrijving FROM stageInfo AS si JOIN instelling AS ins ON si.instelling_ID = ins.ID JOIN begleider AS beg ON si.begleider_ID = beg.ID")
-        aantalStage = len(stageInfo)
-        resetDatabase()
-        return render_template('edit.html', loggedInUser=loggedInUser, loggedIn=loggedIn, stageInfo=stageInfo, aantalStage=aantalStage)
-
-    elif loggedIn!=True:
+    if 'email' in session:
+        if val_ID < 1:
+            return val_detail_none()
+        user_ID = do_database(f"SELECT user_ID FROM users WHERE email = '{loggedInUser}'")
+        user_ID = user_ID[0][0]
+        valInfo = do_database(f"SELECT * FROM valInfo WHERE val_ID = '{val_ID}' and user_ID = '{user_ID}'")
+        if valInfo == []:
+            return val_detail_none()
+        elif valInfo != []:
+            valNaam = valInfo[0][3]
+            print(user_ID, valInfo,valNaam)
+            return render_template('edit.html', valInfo=valInfo,valNaam=valNaam, val_ID=val_ID)
+    
+    elif 'email' not in session:
         return render_template('nietIngelogd.html')
 
     return redirect('/404')
 
-@app.route('/edit/<int:val_ID>')    # complete bullshit for now x2.
-def val_edit2(val_ID):
-    if 'email' in session:
-        val = do_database(f"SELECT * FROM vallen WHERE val_ID = {val_ID} and user_ID = {user_ID}")
-        boekingen = do_database(f"SELECT boekingweek from boeking WHERE huisje_ID = {huisje[0][2]}")
-        newboeking = []
-        for item in boekingen:
-            newboeking.append(item[0])
-        return render_template('boeking_edit.html', val=val, boekingen=newboeking)
-    
-    return redirect('/404')
+@app.route('/app/valEdit/<int:val_ID>', methods=['POST'])
+def val_post_edit(val_ID):
+    return render_template('base.html')
 
 def validate_mac(mac):
     return len(mac) == 12 and all(i in string.hexdigits for i in mac)
