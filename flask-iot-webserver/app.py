@@ -175,7 +175,7 @@ def val_edit(val_ID):
         elif valInfo != []:
             valNaam = valInfo[0][3]
             print(user_ID, valInfo,valNaam)
-            return render_template('edit.html', valInfo=valInfo,valNaam=valNaam, val_ID=val_ID)
+            return render_template('edit.html', valInfo=valInfo,valNaam=valNaam, val_ID=val_ID, loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black',nMessage='Niuwe naam voor val' , lLabelKleur='black', lMessage= 'Niuewe GPS positie [PLACEHOLDER]')
     
     elif 'email' not in session:
         return render_template('nietIngelogd.html')
@@ -184,7 +184,50 @@ def val_edit(val_ID):
 
 @app.route('/app/valEdit/<int:val_ID>', methods=['POST'])
 def val_post_edit(val_ID):
-    return render_template('base.html')
+    if 'email' in session:
+        loggedIn=True
+        loggedInUser=session['email']
+    else:
+        loggedIn=False
+        loggedInUser="niet ingelogd"
+
+    valNaam = request.form['valNaam']
+    valLocatie = request.form['valLocatie']
+    user_ID = do_database(f"SELECT user_ID FROM users WHERE email == '{loggedInUser}'")
+    user_ID = user_ID[0][0]
+    valMac = do_database(f"SELECT valMac FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
+    valMac = valMac[0][0]
+
+    if loggedIn:
+        if validate_val_id(val_ID): 
+            if not existing_val_id(val_ID) or not existing_mac(valMac):
+                return render_template('edit.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='red', nMessage='ongeldige naam/val', lLabelKleur='red', lMessage= 'ongeldige GPS', val_ID=val_ID)
+
+            elif valNaam != "":
+                if valLocatie == "":
+                    valLocatie = do_database(f"SELECT valLocatie FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
+                    valLocatie = valLocatie[0][0]
+                do_database(f"UPDATE valInfo SET valNaam = '{valNaam}', valLocatie = '{valLocatie}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}' AND user_ID == '{user_ID}'")
+                return redirect('/mijnVallen') 
+            elif valLocatie != "":
+                if valNaam == "":
+                    valNaam = do_database(f"SELECT valNaam FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
+                    valNaam = valNaam[0][0]
+                do_database(f"UPDATE valInfo SET valNaam = '{valNaam}', valLocatie = '{valLocatie}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}' AND user_ID == '{user_ID}'")
+                return redirect('/mijnVallen')
+            else:
+                valInfo = do_database(f"SELECT * FROM valInfo WHERE val_ID = '{val_ID}' and user_ID = '{user_ID}'")
+                valNaam = valInfo[0][3]
+                return render_template('edit.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='red', nMessage='ongeldige val naam', lLabelKleur='red', lMessage= 'Ongeldige GPS positie', valNaam=valNaam, val_ID=val_ID)
+
+        else:
+            return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black', vLabelKleur='red', vMessage='niet geldig', lLabelKleur='black')
+
+    elif loggedIn!=True:
+        return render_template('nietIngelogd.html')
+
+    return redirect('/404')
+
 
 def validate_mac(mac):
     return len(mac) == 12 and all(i in string.hexdigits for i in mac)
@@ -211,7 +254,7 @@ def existing_temp_val_id(val_ID):
 
 def resetDatabase():
     curTime = datetime.utcnow().timestamp()
-    do_database(f"DELETE FROM valConnect WHERE timeStamp < {curTime};")
+    do_database(f"DELETE FROM valConnect WHERE timeStamp < '{curTime}';")
 
 
 @app.route('/app/connect', methods=['POST'])
@@ -299,7 +342,7 @@ def val_toevoegen_api():
     val_ID = request.form['val_ID']
     valNaam = request.form['valNaam']
     valLocatie = request.form['valLocatie']
-    valStatus = 1   #set state on active, assuming heartbead was less then 5 minutes this is fine imo
+    valStatus = 1   #set state on active, assuming heartbeat was less then 5 minutes this is fine imo
     user_ID = do_database(f"SELECT user_ID FROM users WHERE email == '{loggedInUser}'")
     tempValMac = do_database(f"SELECT valMac FROM valConnect WHERE val_ID == '{val_ID}';")
     
@@ -336,10 +379,9 @@ def error_page(e):
     return redirect('/404')
 
 if __name__ == '__main__':
-    privKey = 'ssl/kickinganimal.nl/privatekey.pem'
-    cert = 'ssl/kickinganimal.nl/cert.pem'
     def sslContext():
+        privKey = 'ssl/kickinganimal.nl/privatekey.pem'
+        cert = 'ssl/kickinganimal.nl/cert.pem'
         return (cert, privKey)
-
 
     app.run(debug=True, host='0.0.0.0',port=5000, ssl_context=sslContext())
