@@ -119,7 +119,7 @@ def val_details(val_ID):
     if loggedIn:    #rewrite based on new database struct.
         valGegevens = do_database(f"SELECT vi.*, st.statusNaam FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID JOIN status AS st ON vi.valStatus = st.status_ID WHERE email = '{loggedInUser}' AND vi.val_ID = '{val_ID}'")
         valStatus = valGegevens[0][4]
-    
+
         return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID, valStatus=valStatus)
     
     elif loggedIn!=True:
@@ -129,6 +129,7 @@ def val_details(val_ID):
 
 @app.route('/mijnVallen')
 def mijn_vallen():
+    activeCheck()
     if 'email' in session:
         loggedIn=True
         loggedInUser=session['email']
@@ -197,6 +198,7 @@ def val_post_edit(val_ID):
     user_ID = user_ID[0][0]
     valMac = do_database(f"SELECT valMac FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
     valMac = valMac[0][0]
+    timeStamp = datetime.utcnow().timestamp()
 
     if loggedIn:
         if validate_val_id(val_ID): 
@@ -204,16 +206,18 @@ def val_post_edit(val_ID):
                 return render_template('edit.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='red', nMessage='ongeldige naam/val', lLabelKleur='red', lMessage= 'ongeldige GPS', val_ID=val_ID)
 
             elif valNaam != "":
+                valStatus = 1 # bij verandering maak val 'actief', assumpion dat je een actiefe val veranderd anders is die binnen no-time weer offline
                 if valLocatie == "":
                     valLocatie = do_database(f"SELECT valLocatie FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
                     valLocatie = valLocatie[0][0]
-                do_database(f"UPDATE valInfo SET valNaam = '{valNaam}', valLocatie = '{valLocatie}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}' AND user_ID == '{user_ID}'")
+                do_database(f"UPDATE valInfo SET valNaam = '{valNaam}', valLocatie = '{valLocatie}', timeStamp = '{timeStamp}', valStatus = '{valStatus}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}' AND user_ID == '{user_ID}'")
                 return redirect('/mijnVallen') 
             elif valLocatie != "":
+                valStatus = 1 # bij verandering maak val 'actief', assumpion dat je een actiefe val veranderd anders is die binnen no-time weer offline
                 if valNaam == "":
                     valNaam = do_database(f"SELECT valNaam FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
                     valNaam = valNaam[0][0]
-                do_database(f"UPDATE valInfo SET valNaam = '{valNaam}', valLocatie = '{valLocatie}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}' AND user_ID == '{user_ID}'")
+                do_database(f"UPDATE valInfo SET valNaam = '{valNaam}', valLocatie = '{valLocatie}', timeStamp = '{timeStamp}', valStatus = '{valStatus}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}' AND user_ID == '{user_ID}'")
                 return redirect('/mijnVallen')
             else:
                 valInfo = do_database(f"SELECT * FROM valInfo WHERE val_ID = '{val_ID}' and user_ID = '{user_ID}'")
@@ -260,6 +264,22 @@ def resetDatabase():
     curTime = datetime.utcnow().timestamp()
     do_database(f"DELETE FROM valConnect WHERE timeStamp < '{curTime}';")
 
+def activeCheck():
+    curTime = datetime.utcnow().timestamp()
+    databaseTime = do_database(f"SELECT val_ID, timeStamp, valStatus FROM valInfo")
+
+    for i in range(0, len(databaseTime)):
+        valStatus = databaseTime[i][2]
+        val_ID = databaseTime[i][0]
+
+        if (datetime.fromtimestamp(databaseTime[i][1]) + timedelta(hours=+24)).timestamp() < curTime:
+            valStatus = 3 # welke val status als meer dan 24 u geleden een ping.
+            do_database(f"UPDATE valInfo SET valStatus = '{valStatus}' WHERE val_ID == '{val_ID}'")
+        
+        if (datetime.fromtimestamp(databaseTime[i][1]) + timedelta(hours=+24)).timestamp() > curTime and valStatus == 3:
+            valStatus = 1 # als ping minder dan 24u geleden en status stond op 3 (onbekend) dan naar actief zetten.
+            do_database(f"UPDATE valInfo SET valStatus = '{valStatus}' WHERE val_ID == '{val_ID}'")
+
 
 @app.route('/app/connect', methods=['POST'])
 def val_connectie():
@@ -298,7 +318,8 @@ def val_update():
     valMac = request.json['valMac']
     val_ID = request.json['val_ID']
     valStatus = request.json['valStatus']
-
+    timeStamp = datetime.utcnow().timestamp()
+    
     if not request.json:
         return jsonify({ "error": "invalid-json: request must be in json formatting" })
     if not validate_mac(valMac):
@@ -311,9 +332,9 @@ def val_update():
         return jsonify({"error": "invalid-valId: valId does not exist"})
     if not existing_val(val_ID, valMac):
         return jsonify({"error": "invalid-valId: valId does not exist in pair\ninvalid-valMac: valMac does not exist in pair"})
-
-    print(val_ID,valMac)
-    do_database(f"UPDATE valInfo SET valStatus = '{valStatus}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}'")
+    
+    print(val_ID,valMac, timeStamp)
+    do_database(f"UPDATE valInfo SET valStatus = '{valStatus}', timeStamp = '{timeStamp}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}'")
     return jsonify({ "error": f"Status updated to: '{valStatus}'" })
 
 @app.route('/valToevoegen', methods=['GET'])

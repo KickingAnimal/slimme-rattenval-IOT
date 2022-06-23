@@ -6,7 +6,7 @@ port = 8080
 
 parser = OptionParser()
 parser.add_option('-c', '--connect', action="store_true", help='simulate new connection to the server')
-parser.add_option('-s', '--status', type="choice", choices=[ "gevangen", "actief", "offline", "0", "1", "2" ], help='set status of the trap')
+parser.add_option('-s', '--status', type="choice", choices=[ "gevangen", "actief", "offline", "onbekend", "0", "1", "2", "3" ], help='set status of the trap')
 parser.add_option('-m', '--mac', type='string', help='mac-address to use, otherwise random.')
 parser.add_option('-i', '--val_id', type='string', help='val ID to use, otherwise random.')
 
@@ -42,4 +42,7 @@ elif opt.status == 'actief' or opt.status == "1":
     print('\n\n\n->', res.json()['error'])
 elif opt.status == 'gevangen' or opt.status == "2":
     res = requests.post(f'https://{host}:{port}/app/valUpdate', json={ 'valMac': mac, 'val_ID': valId, 'valStatus': 2 }, verify=False)
+    print('\n\n\n->', res.json()['error'])
+elif opt.status == 'onbekend' or opt.status == "3":
+    res = requests.post(f'https://{host}:{port}/app/valUpdate', json={ 'valMac': mac, 'val_ID': valId, 'valStatus': 3 }, verify=False)
     print('\n\n\n->', res.json()['error'])
