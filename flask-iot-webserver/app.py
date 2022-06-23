@@ -223,7 +223,7 @@ def val_post_edit(val_ID):
         else:
             return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black', vLabelKleur='red', vMessage='niet geldig', lLabelKleur='black')
 
-    elif loggedIn!=True:
+    elif not loggedIn:
         return render_template('nietIngelogd.html')
 
     return redirect('/404')
@@ -250,6 +250,10 @@ def existing_val_id(val_ID):
 
 def existing_temp_val_id(val_ID):
     validate = do_database(f"SELECT COUNT(val_ID) FROM valConnect WHERE val_ID = '{val_ID}'")
+    return bool(validate[0][0])
+
+def existing_val(val_ID, valMac):
+    validate = do_database(f"SELECT COUNT(val_ID) FROM valInfo WHERE val_ID = '{val_ID}' AND valMac = '{valMac}'")
     return bool(validate[0][0])
 
 def resetDatabase():
@@ -293,26 +297,29 @@ def val_connectie():
 def val_update():
     valMac = request.json['valMac']
     val_ID = request.json['val_ID']
+    valStatus = request.json['valStatus']
 
     if not request.json:
         return jsonify({ "error": "invalid-json: request must be in json formatting" })
     if not validate_mac(valMac):
         return jsonify({ "error": "invalid-mac: mac must be in '1234567890AB' format" })
     if not existing_mac(valMac):
-        return jsonify({ "error": "invalid-valMac: valMac does not exists" })
+        return jsonify({ "error": "invalid-valMac: valMac does not exist" })
     if not validate_val_id(val_ID):
         return jsonify({"error": "invalid-valId: invalid format: must be in 0 - 123456789012 format. only numeric."})
     if not existing_val_id(val_ID):
         return jsonify({"error": "invalid-valId: valId does not exist"})
-
+    if not existing_val(val_ID, valMac):
+        return jsonify({"error": "invalid-valId: valId does not exist in pair\ninvalid-valMac: valMac does not exist in pair"})
 
     print(val_ID,valMac)
-    return jsonify({ "error": "Nothing happened" })
+    do_database(f"UPDATE valInfo SET valStatus = '{valStatus}' WHERE val_ID == '{val_ID}' AND valMac == '{valMac}'")
+    return jsonify({ "error": f"Status updated to: '{valStatus}'" })
 
 @app.route('/valToevoegen', methods=['GET'])
 def val_toevoegen():
     resetDatabase()
-    
+
     if 'email' in session:
         loggedIn=True
         loggedInUser=session['email']

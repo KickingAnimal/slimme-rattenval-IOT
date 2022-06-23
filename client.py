@@ -13,10 +13,10 @@ parser.add_option('-i', '--val_id', type='string', help='val ID to use, otherwis
 opt, args = parser.parse_args()
 
 if (opt.connect is None) == (opt.status is None):
-	print("Error: either '--connect' or '--status' has to be specified")
-	print()
-	parser.print_help()
-	exit()
+    print("Error: either '--connect' or '--status' has to be specified")
+    print()
+    parser.print_help()
+    exit()
 
 if opt.mac:
     mac = opt.mac
@@ -31,15 +31,15 @@ else:
 print('using val ID:', valId, "and using mac-address:", mac)
 
 if opt.connect:
-	res = requests.post(f'https://{host}:{port}/app/connect', json={ 'valMac': mac, 'val_ID': valId }, verify=False)
-	print('\n\n\n->', res.json()['error'])
+    res = requests.post(f'https://{host}:{port}/app/connect', json={ 'valMac': mac, 'val_ID': valId }, verify=False)
+    print('\n\n\n->', res.json()['error'])
 
 elif opt.status == 'offline' or opt.status == "0":
     res = requests.post(f'https://{host}:{port}/app/valUpdate', json={ 'valMac': mac, 'val_ID': valId, 'valStatus': 0 }, verify=False)
-
+    print('\n\n\n->', res.json()['error'])
 elif opt.status == 'actief' or opt.status == "1":
-	res = requests.post(f'https://{host}:{port}/app/valUpdate', json={ 'valMac': mac, 'val_ID': valId, 'valStatus': 1 }, verify=False)
-	print('\n\n\n->', res.json()['error'])
+    res = requests.post(f'https://{host}:{port}/app/valUpdate', json={ 'valMac': mac, 'val_ID': valId, 'valStatus': 1 }, verify=False)
+    print('\n\n\n->', res.json()['error'])
 elif opt.status == 'gevangen' or opt.status == "2":
-	res = requests.post(f'https://{host}:{port}/app/valUpdate', json={ 'valMac': mac, 'val_ID': valId, 'valStatus': 2 }, verify=False)
-	print('\n\n\n->', res.json()['error'])
+    res = requests.post(f'https://{host}:{port}/app/valUpdate', json={ 'valMac': mac, 'val_ID': valId, 'valStatus': 2 }, verify=False)
+    print('\n\n\n->', res.json()['error'])
