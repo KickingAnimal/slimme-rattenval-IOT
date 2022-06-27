@@ -19,6 +19,7 @@ app.secret_key = "secret"
 def before_request():
     if not request.is_secure:
         url = request.url.replace('http://', 'https://', 1)
+        url = url.replace(':8080', ':4430', 1)
         return redirect(url)
         
 @app.route('/')

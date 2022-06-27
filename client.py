@@ -2,7 +2,7 @@ import requests, random
 from optparse import OptionParser
 
 host = "www.kickinganimal.nl"
-port = 8080
+port = 4430
 
 parser = OptionParser()
 parser.add_option('-c', '--connect', action="store_true", help='simulate new connection to the server')

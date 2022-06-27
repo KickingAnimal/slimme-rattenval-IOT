@@ -3429,12 +3429,12 @@ textarea.form-control-lg {
 }
 
 .btn-outline-danger {
-  color: #dc3545;
-  border-color: #dc3545;
+  color: #000;
+  border-color: #f00;
 }
 .btn-outline-danger:hover {
   color: #fff;
-  background-color: #dc3545;
+  background-color: #f00;
   border-color: #dc3545;
 }
 .btn-check:focus + .btn-outline-danger, .btn-outline-danger:focus {
