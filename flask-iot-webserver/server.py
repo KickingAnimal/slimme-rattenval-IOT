@@ -1,12 +1,16 @@
-import os
+import os, httpApp, app
 from threading import Thread
 
+def sslContext():
+        privKey = 'ssl/kickinganimal.nl/privatekey.pem'
+        cert = 'ssl/kickinganimal.nl/cert.pem'
+        return (cert, privKey)
 
-def httpApp(): 
-    os.system('python httpApp.py')
+def httpsServer():
+    app.app.run(debug=False, host='0.0.0.0',port=5000, ssl_context=sslContext(), use_reloader=False)
 
-def httpsApp():
-    os.system('python app.py')
+def httpServer(): 
+    httpApp.app.run(debug=False, host='0.0.0.0',port=4000, use_reloader=False)
 
-Thread(target = httpApp).start() 
-Thread(target = httpsApp).start()
+Thread(target = httpServer).start()
+Thread(target = httpsServer).start()
