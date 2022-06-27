@@ -1,8 +1,5 @@
-from flask import Flask, render_template, redirect, request, session, jsonify
-from flask_bcrypt import Bcrypt
-import string
+from flask import Flask, render_template, redirect, request
 
-bcrypt = Bcrypt()
 app = Flask(__name__)
 app.secret_key = "secret"
 
