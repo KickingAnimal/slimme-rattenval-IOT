@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="h1 mb-3 fw-normal" style="padding-top: 2%;">Verwijder: "{{valNaam}}"</h1>
+    <main class="form-signin">
+        <form action="/app/valDelete/{{val_ID}}" method="post">
+          <div class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" value="True" id="deleteVerified" name="deleteVerified">
+            <label class="custom-control-label" for="deleteVerified">Bevestiging verwijderen val</label>
+          </div>
+          {% if message %}
+          <div style="padding: 1%;">  
+            <p style="color: red;">{{messageText}}</p>
+          </div>
+          {% endif %}
+          <button type="submit" class="w-100 btn btn-outline-dark ">Verwijder val</button>
+        </form>
+      </main>
+{% endblock %}

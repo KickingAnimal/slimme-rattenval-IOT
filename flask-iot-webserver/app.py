@@ -234,6 +234,68 @@ def val_post_edit(val_ID):
     return redirect('/404')
 
 
+
+
+@app.route('/valDelete/<int:val_ID>')
+def val_delete(val_ID):
+    if 'email' in session:
+        loggedIn=True
+        loggedInUser=session['email']
+    else:
+        loggedIn=False
+        loggedInUser="niet ingelogd"
+
+    if 'email' in session:
+        if val_ID < 1:
+            return val_detail_none()
+        user_ID = do_database(f"SELECT user_ID FROM users WHERE email = '{loggedInUser}'")
+        user_ID = user_ID[0][0]
+        valInfo = do_database(f"SELECT * FROM valInfo WHERE val_ID = '{val_ID}' and user_ID = '{user_ID}'")
+        if valInfo == []:
+            return val_detail_none()
+        elif valInfo != []:
+            valNaam = valInfo[0][3]
+            print(user_ID, valInfo,valNaam)
+            return render_template('valDelete.html', valInfo=valInfo,valNaam=valNaam, val_ID=val_ID, loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='red',lLabelKleur='red')
+    
+    elif 'email' not in session:
+        return render_template('nietIngelogd.html')
+
+    return redirect('/404')
+
+@app.route('/app/valDelete/<int:val_ID>', methods=['POST'])
+def val_post_delete(val_ID):
+    if 'email' in session:
+        loggedIn=True
+        loggedInUser=session['email']
+    else:
+        loggedIn=False
+        loggedInUser="niet ingelogd"
+
+    deleteVerified = request.form.get('deleteVerified')
+    if deleteVerified == None:
+        deleteVerified = False
+
+    user_ID = do_database(f"SELECT user_ID FROM users WHERE email == '{loggedInUser}'")
+    user_ID = user_ID[0][0]
+    valNaam = do_database(f"SELECT valNaam FROM valInfo WHERE val_ID = '{val_ID}' and user_ID = '{user_ID}'")
+    valNaam = valNaam[0][0]
+    valMac = do_database(f"SELECT valMac FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
+    valMac = valMac[0][0]
+
+    if loggedIn:
+        if deleteVerified:
+            do_database(f"DELETE FROM valInfo WHERE valMac == '{valMac}' AND user_ID == '{user_ID}' AND val_ID = '{val_ID}'")
+            return redirect('/mijnVallen')
+        elif not deleteVerified:
+            return render_template('valDelete.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valNaam=valNaam,val_ID=val_ID, messageText='Om de val te verwijderen moet je dit accepteren', message=True)
+
+    elif not loggedIn:
+        return render_template('nietIngelogd.html')
+
+    return redirect('/404')
+
+
 def validate_mac(mac):
     return len(mac) == 12 and all(i in string.hexdigits for i in mac)
 
@@ -263,7 +325,7 @@ def existing_val(val_ID, valMac):
 
 def resetDatabase():
     curTime = datetime.utcnow().timestamp()
-    do_database(f"DELETE FROM valConnect WHERE timeStamp < '{curTime}';")
+    do_database(f"DELETE FROM valConnect WHERE timeStamp < '{curTime}'")
 
 def activeCheck():
     curTime = datetime.utcnow().timestamp()
@@ -374,7 +436,9 @@ def val_toevoegen_api():
     valStatus = 1   #set state on active, assuming heartbeat was less then 5 minutes this is fine imo
     user_ID = do_database(f"SELECT user_ID FROM users WHERE email == '{loggedInUser}'")
     tempValMac = do_database(f"SELECT valMac FROM valConnect WHERE val_ID == '{val_ID}';")
-    
+    timeStamp = timeStamp = datetime.utcnow().timestamp()
+
+
     if valNaam == "":
         valNaam = f"Nieuwe val van {loggedInUser}"
 
@@ -387,7 +451,7 @@ def val_toevoegen_api():
                 return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black', vLabelKleur='red', vMessage='niet in connect modus', lLabelKleur='black')
             
             else:
-                do_database(f"INSERT INTO valInfo (val_ID, user_ID, valMac, valNaam, valStatus, valLocatie) VALUES ('{val_ID}', '{user_ID[0][0]}', '{tempValMac[0][0]}', '{valNaam}', '{valStatus}', '{valLocatie}');")
+                do_database(f"INSERT INTO valInfo (val_ID, user_ID, valMac, valNaam, valStatus, valLocatie, timeStamp) VALUES ('{val_ID}', '{user_ID[0][0]}', '{tempValMac[0][0]}', '{valNaam}', '{valStatus}', '{valLocatie}', '{timeStamp}');")
                 do_database(f"DELETE FROM valConnect WHERE val_ID == '{val_ID}';")
                 return redirect('/mijnVallen') 
         
