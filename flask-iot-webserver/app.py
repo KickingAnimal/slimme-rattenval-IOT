@@ -179,8 +179,13 @@ def val_edit(val_ID):
             return val_detail_none()
         elif valInfo != []:
             valNaam = valInfo[0][3]
-            print(user_ID, valInfo,valNaam)
-            return render_template('edit.html', valInfo=valInfo,valNaam=valNaam, val_ID=val_ID, loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black',nMessage='Niuwe naam voor val' , lLabelKleur='black', lMessage= 'Niuewe GPS positie [PLACEHOLDER]')
+            valLocatie = valInfo[0][5]
+            lat_s, lon_s = valLocatie.split(',')
+            lat = float(lat_s)
+            lon = float(lon_s)
+            print(user_ID, valInfo,valNaam,lat,lon)
+            trap_json=[{"name": valNaam, "location_lat": lat, "location_lot": lon }]
+            return render_template('edit.html',trap_json=trap_json, valLocatie=valLocatie, valInfo=valInfo,valNaam=valNaam, val_ID=val_ID, loggedInUser=loggedInUser, loggedIn=loggedIn, nLabelKleur='black',nMessage='Niuwe naam voor val' , lLabelKleur='black', lMessage= 'Niuewe GPS positie [PLACEHOLDER]')
     
     elif 'email' not in session:
         return render_template('nietIngelogd.html')
@@ -198,6 +203,7 @@ def val_post_edit(val_ID):
 
     valNaam = request.form['valNaam']
     valLocatie = request.form['valLocatie']
+    print(valLocatie)
     user_ID = do_database(f"SELECT user_ID FROM users WHERE email == '{loggedInUser}'")
     user_ID = user_ID[0][0]
     valMac = do_database(f"SELECT valMac FROM valInfo WHERE val_ID = '{val_ID}' AND user_ID = '{user_ID}'")
@@ -412,7 +418,7 @@ def val_toevoegen():
         loggedInUser="niet ingelogd"
 
     if loggedIn:
-        return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, vLabelKleur='black', nLabelKleur='black', lLabelKleur='black')
+        return render_template('valToevoegen.html', loggedInUser=loggedInUser, loggedIn=loggedIn, vLabelKleur='black', nLabelKleur='black', lLabelKleur='black', valLocatie="0,0")
 
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
