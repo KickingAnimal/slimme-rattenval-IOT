@@ -1,35 +1,54 @@
 from machine import Pin, ADC
 from time import sleep
-from machine import Pin
-from boot import connetion
+from boot import wlan
+import network
+import config
+import urequests as requests
 
-pin32 = Pin(32, Pin.OUT)
+urlStatus = f"https://{config.serverURL}:{config.port}{config.statusURL}"
+urlConnect = f"https://{config.serverURL}:{config.port}{config.connectURL}"
+
+pin32 = Pin(32, Pin.IN)
 pin2 = Pin(2, Pin.OUT)
 onboard_led = pin2
 pin34 = Pin(34, Pin.IN)
-adc = ADC(pin34)
-PROP = 1100 / 65535
-TIMER = 0
 
-while connection.isconnected():
-    # read temperature
-    v_out = adc.read_u16() * PROP
-    temp = (v_out - 500) / 10
-    print(temp)
-    if temp >= 35 and temp <= 40:
-        TIMER += 1
-        if TIMER >= 20:
-            print("temperatuur detectie")
-            onboard_led.on
-            sleep(1)
-            TIMER = 0
-    # send data to server
+n=0
+def blink(pin, n, sec):
+    '''
+        make pin [Pin(X, Pin.OUT)] blink for n times
+    '''
+    while n > 0:
+        n -= 1    
+        sleep(sec)
+        pin.on()
+        sleep(sec)
+        pin.off()
 
-    # flash blue LED indicating data was sent
+blink(onboard_led,5,0.05)
+valStatus = pin32.value()
 
-    # read server response
+while wlan.status() == 1010:
+    sleep(1)
 
-    # set or unset red LED if server tells us to do so
+    buttonPressed = pin34.value()
+    valButton = pin32.value()
 
-    # sleep a little until next temperature reading
-    sleep(0.1)
+    if buttonPressed:
+        print("button was pressed:",buttonPressed, "\ntrying to connect")
+        post = requests.post(urlConnect, json={ 'valMac': config.valMac, 'val_ID': config.val_ID })
+        error = post.json()['error']
+        print(post,"\n-->",error)
+
+        blink(onboard_led,5,0.25)
+    
+    elif not buttonPressed:
+        print("'val' dicht:", bool(valButton), valStatus)
+        newValStatus = valButton
+        if valStatus != newValStatus:
+            valStatus = newValStatus
+            post = requests.post(urlStatus, json={ 'valMac': config.valMac, 'val_ID': config.val_ID, 'valStatus': newValStatus })
+            error = post.json()['error']
+            print(post,"\n-->",error)
+
+            blink(onboard_led,10,0.025)

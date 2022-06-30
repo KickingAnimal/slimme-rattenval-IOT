@@ -233,9 +233,6 @@ def val_post_edit(val_ID):
 
     return redirect('/404')
 
-
-
-
 @app.route('/valDelete/<int:val_ID>')
 def val_delete(val_ID):
     if 'email' in session:

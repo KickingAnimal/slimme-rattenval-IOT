@@ -1,3 +1,15 @@
-WIFI_SSID = "linuxMintDMF"
-WIFI_PASSWORD = "1tbbTzbC"
-SERVER = "10.42.0.1"
+import network
+import ubinascii
+
+wlan_sta = network.WLAN(network.STA_IF)
+wlan_sta.active(True)
+wlan_mac = wlan_sta.config('mac')
+
+val_ID = 5  # for now static, should be based on mac or random.
+valMac = ubinascii.hexlify(wlan_mac).decode().upper()
+
+connectURL = '/app/connect'
+statusURL = '/app/valUpdate'
+serverURL = 'www.kickinganima.nl'
+
+port = 4430

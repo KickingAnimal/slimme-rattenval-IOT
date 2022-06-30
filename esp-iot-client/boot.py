@@ -1,31 +1,35 @@
-import sys
-import config
-import network
+import wifimgr
 from time import sleep
+import machine
+import sys
+from machine import Pin
 
-connection = network.WLAN(network.STA_IF)
+try:
+  import usocket as socket
+except:
+  import socket
 
+led = Pin(2, machine.Pin.OUT)
 
-def connect():
+wlan = wifimgr.get_connection()
+if wlan is None:
+    print("Could not initialize the network connection.")
+    while True:
+        pass  # you shall not pass :D
 
-    if connection.isconnected():
-        print("Already connected")
-        return
+print("ESP OK")
 
-    connection.active(True)
-    connection.connect(config.WIFI_SSID, config.WIFI_PASSWORD)
+led2 = Pin(2, Pin.OUT)
 
-    retry = 0
-    while not connection.isconnected():  # wait until connection is complete
-        if retry == 10:  # try 10 times
-            sys.exit("Could not establish connection, check your settings")
-        retry += 1
-
-        sleep(1)  # check again in a sec
-
-    # no exit, we have a connection!
-    print("Connection established")
-
-
-if __name__ == "__main__":
-    connect()
+led2.on()   #blink 3 times on
+sleep(0.5)
+led2.off()
+sleep(0.5)
+led2.on()
+sleep(0.5)
+led2.off()
+sleep(0.5)
+led2.on()
+sleep(0.5)
+led2.off()
+sleep(0.5)
