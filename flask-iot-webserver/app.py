@@ -119,10 +119,13 @@ def val_details(val_ID):
 
     if loggedIn:    #rewrite based on new database struct.
         valGegevens = do_database(f"SELECT vi.*, st.statusNaam FROM valInfo AS vi JOIN users AS usr ON vi.user_ID = usr.user_ID JOIN status AS st ON vi.valStatus = st.status_ID WHERE email = '{loggedInUser}' AND vi.val_ID = '{val_ID}'")
-        valStatus = valGegevens[0][4]
+        if valGegevens != []:
+            valStatus = valGegevens[0][4]
 
-        return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID, valStatus=valStatus)
-    
+            return render_template('valDetail.html', loggedInUser=loggedInUser, loggedIn=loggedIn, valGegevens=valGegevens, val_ID=val_ID, valStatus=valStatus)
+        elif valGegevens == []:
+            return val_detail_none()
+
     elif loggedIn!=True:
         return render_template('nietIngelogd.html')
     
