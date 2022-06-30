@@ -10,6 +10,6 @@ valMac = ubinascii.hexlify(wlan_mac).decode().upper()
 
 connectURL = '/app/connect'
 statusURL = '/app/valUpdate'
-serverURL = 'www.kickinganima.nl'
+serverURL = 'www.kickinganimal.nl'
 
 port = 4430
